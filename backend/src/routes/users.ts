@@ -17,9 +17,14 @@ usersRouter.post("/register", async (req, res) => {
         const user = new User({ username, password, token });
         await user.save();
 
-        return res.send({ user });
+        const safeUser = {
+            _id: user._id,
+            username: user.username,
+            token: user.token,
+        };
+
+        return res.send({ user: safeUser });
     } catch (error) {
-        console.log(error);
         return res.status(500).send({ error: "Server error" });
     }
 });
@@ -38,9 +43,14 @@ usersRouter.post("/login", async (req, res) => {
         user.token = randomUUID();
         await user.save();
 
-        return res.send({ message: "Login successful", user });
+        const safeUser = {
+            _id: user._id,
+            username: user.username,
+            token: user.token,
+        };
+
+        return res.send({ user: safeUser });
     } catch (error) {
-        console.log(error);
         return res.status(500).send({ error: "Server error" });
     }
 });
