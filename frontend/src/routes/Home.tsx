@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchPosts } from '../features/posts/postsSlice';
-import { Card, CardContent, Typography, CardMedia } from '@mui/material';
+import { Card, CardContent, Typography, CardMedia, Box } from '@mui/material';
 import dayjs from 'dayjs';
 import { useNavigate } from 'react-router-dom';
 
@@ -15,7 +15,7 @@ const Home = () => {
     }, [dispatch]);
 
     return (
-        <div>
+        <Box sx={{ maxWidth: 700, marginLeft: 4 }}>
             {posts.map(post => (
                 <Card
                     key={post._id}
@@ -25,8 +25,11 @@ const Home = () => {
                     {post.image && (
                         <CardMedia
                             component="img"
-                            height="200"
                             image={`http://localhost:8000/${post.image}`}
+                            sx={{
+                                height: 200,
+                                objectFit: 'cover'
+                            }}
                         />
                     )}
                     <CardContent>
@@ -40,7 +43,7 @@ const Home = () => {
                     </CardContent>
                 </Card>
             ))}
-        </div>
+        </Box>
     );
 };
 

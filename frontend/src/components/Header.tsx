@@ -10,9 +10,17 @@ export const Header = () => {
     return (
         <AppBar position="static">
             <Toolbar>
-                <Typography variant="h6" sx={{ flexGrow: 1 }}>
+                <Typography
+                    variant="h6"
+                    sx={{ flexGrow: 1, cursor: 'pointer' }}
+                    component={Link}
+                    to="/"
+                    color="inherit"
+                    style={{ textDecoration: 'none' }}
+                >
                     My App
                 </Typography>
+
                 {!user ? (
                     <>
                         <Button color="inherit" component={Link} to="/login">Login</Button>
