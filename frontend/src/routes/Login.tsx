@@ -1,30 +1,47 @@
-import { useState } from 'react';
-import { Box, Button, TextField, CircularProgress } from '@mui/material';
-import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { loginUser } from '../features/users/usersSlice';
+import { useState, useEffect } from 'react';
+import { TextField, Button, CircularProgress, Box } from '@mui/material';
+import type { SyntheticEvent } from 'react';
+import { useAppDispatch, useAppSelector } from "../app/hooks";
+import { loginUser } from "../features/users/usersSlice";
 import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
+    const dispatch = useAppDispatch();
+    const { loading, error, user } = useAppSelector(state => state.users);
+    const navigate = useNavigate();
+
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const dispatch = useAppDispatch();
-    const navigate = useNavigate();
-    const loading = useAppSelector(state => state.users.loading);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
         e.preventDefault();
-        const result = await dispatch(loginUser({ username, password }));
-        if (result.meta.requestStatus === 'fulfilled') navigate('/');
+        dispatch(loginUser({ username, password }));
     };
 
+    useEffect(() => {
+        if (user) navigate('/');
+    }, [user, navigate]);
+
     return (
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-            <TextField label="Username" fullWidth margin="normal" value={username} onChange={e => setUsername(e.target.value)} />
-            <TextField label="Password" type="password" fullWidth margin="normal" value={password} onChange={e => setPassword(e.target.value)} />
-            <Button type="submit" variant="contained" fullWidth disabled={loading}>
-                {loading ? <CircularProgress size={24} /> : 'Login'}
-            </Button>
-        </Box>
+        <form onSubmit={handleSubmit} style={{ maxWidth: 400, margin: '20px auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <TextField
+                label="Username"
+                value={username}
+                onChange={e => setUsername(e.target.value)} required
+            />
+            <TextField
+                type="password"
+                label="Password"
+                value={password} onChange={e => setPassword(e.target.value)} required
+            />
+            <Box sx={{ position: 'relative' }}>
+                <Button type="submit" variant="contained" disabled={loading} fullWidth>
+                    Login
+                </Button>
+                {loading && <CircularProgress size={24} sx={{ position: 'absolute', top: '50%', left: '50%', marginTop: '-12px', marginLeft: '-12px' }} />}
+            </Box>
+            {error && <Box color="red">{error}</Box>}
+        </form>
     );
 };
 

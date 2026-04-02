@@ -1,64 +1,76 @@
 import { useState } from 'react';
-import axios from 'axios';
-import { TextField, Button, Box } from '@mui/material';
 import { useAppSelector } from '../app/hooks';
+import axios from 'axios';
+import { TextField, Button, CircularProgress, Box } from '@mui/material';
+import type { SyntheticEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const AddPost = () => {
     const user = useAppSelector(state => state.users.user);
-    const navigate = useNavigate();
-
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [image, setImage] = useState<File | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const navigate = useNavigate();
 
-    const submit = async () => {
-        if (!title) return alert('Title required');
-        if (!description && !image) return alert('Fill description or image');
+    const handleSubmit = async (e: SyntheticEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (!user) return;
+        if (!title) return setError('Title is required');
+        setLoading(true);
+        setError('');
+        try {
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('description', description);
+            if (image) formData.append('image', image);
 
-        const formData = new FormData();
-        formData.append('title', title);
-        formData.append('description', description);
-        if (image) formData.append('image', image);
+            await axios.post('http://localhost:8000/posts', formData, {
+                headers: { Authorization: user.token, 'Content-Type': 'multipart/form-data' },
+            });
 
-        await axios.post('http://localhost:8000/posts', formData, {
-            headers: {
-                Authorization: user?.token,
-            },
-        });
+            setTitle('');
+            setDescription('');
+            setImage(null);
 
-        navigate('/');
+            navigate('/');
+        } catch (err: any) {
+            setError(err.response?.data?.error || 'Error creating post');
+        }
+        setLoading(false);
     };
 
     return (
-        <Box sx={{ maxWidth: 500, marginLeft: 4 }}>
+        <form onSubmit={handleSubmit} style={{ maxWidth: 600, margin: '20px auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
             <TextField
-                fullWidth
                 label="Title"
                 value={title}
-                onChange={e => setTitle(e.target.value)}
-                sx={{ marginBottom: 2 }}
+                onChange={e => setTitle(e.target.value)} required
             />
-
             <TextField
-                fullWidth
                 label="Description"
-                multiline
-                rows={4}
+                multiline minRows={3}
                 value={description}
                 onChange={e => setDescription(e.target.value)}
-                sx={{ marginBottom: 2 }}
             />
-
-            <input
-                type="file"
-                onChange={e => setImage(e.target.files?.[0] || null)}
-            />
-
-            <Button variant="contained" onClick={submit} sx={{ marginTop: 2 }}>
-                Create Post
+            <Button variant="contained" component="label">
+                Choose Image
+                <input
+                    type="file"
+                    hidden
+                    onChange={e => setImage(e.target.files?.[0] || null)}
+                />
             </Button>
-        </Box>
+            {image && <Box>{image.name}</Box>}
+            <Box sx={{ position: 'relative' }}>
+                <Button type="submit" variant="contained" disabled={loading} fullWidth>
+                    Create Post
+                </Button>
+                {loading && <CircularProgress size={24} sx={{ position: 'absolute', top: '50%', left: '50%', marginTop: '-12px', marginLeft: '-12px' }} />}
+            </Box>
+            {error && <Box color="red">{error}</Box>}
+        </form>
     );
 };
 

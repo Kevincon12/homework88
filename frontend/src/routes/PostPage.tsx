@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import { Card, CardContent, Typography, CardMedia, TextField, Button } from '@mui/material';
+import { Card, CardContent, Typography, CardMedia, TextField, Button, CircularProgress, Box } from '@mui/material';
 import dayjs from 'dayjs';
 import { useAppSelector } from '../app/hooks';
+import type { SyntheticEvent } from 'react';
 
 const PostPage = () => {
     const { id } = useParams();
@@ -12,6 +13,7 @@ const PostPage = () => {
     const [post, setPost] = useState<any>(null);
     const [comments, setComments] = useState<any[]>([]);
     const [text, setText] = useState('');
+    const [loading, setLoading] = useState(false);
 
     const fetchPost = async () => {
         const res = await axios.get(`http://localhost:8000/posts/${id}`);
@@ -23,22 +25,22 @@ const PostPage = () => {
         setComments(res.data);
     };
 
-    const addComment = async () => {
-        await axios.post(
-            'http://localhost:8000/comments',
-            {
-                text,
-                postId: id,
-            },
-            {
-                headers: {
-                    Authorization: user?.token,
-                },
-            }
-        );
-
-        setText('');
-        fetchComments();
+    const addComment = async (e: SyntheticEvent) => {
+        e.preventDefault();
+        if (!text || !user) return;
+        setLoading(true);
+        try {
+            await axios.post(
+                'http://localhost:8000/comments',
+                { text, postId: id },
+                { headers: { Authorization: user.token } }
+            );
+            setText('');
+            fetchComments();
+        } catch (err: any) {
+            console.error(err);
+        }
+        setLoading(false);
     };
 
     useEffect(() => {
@@ -55,10 +57,7 @@ const PostPage = () => {
                     <CardMedia
                         component="img"
                         image={`http://localhost:8000/${post.image}`}
-                        sx={{
-                            maxHeight: 400,
-                            objectFit: 'contain'
-                        }}
+                        sx={{ maxHeight: 400, objectFit: 'contain' }}
                     />
                 )}
                 <CardContent>
@@ -82,7 +81,7 @@ const PostPage = () => {
             ))}
 
             {user && (
-                <div>
+                <form onSubmit={addComment}>
                     <TextField
                         fullWidth
                         value={text}
@@ -90,10 +89,24 @@ const PostPage = () => {
                         placeholder="Write comment"
                         sx={{ marginTop: 2 }}
                     />
-                    <Button onClick={addComment} variant="contained" sx={{ marginTop: 1 }}>
-                        Add Comment
-                    </Button>
-                </div>
+                    <Box sx={{ position: 'relative', marginTop: 1 }}>
+                        <Button type="submit" variant="contained" disabled={loading}>
+                            Add Comment
+                        </Button>
+                        {loading && (
+                            <CircularProgress
+                                size={24}
+                                sx={{
+                                    position: 'absolute',
+                                    top: '50%',
+                                    left: '50%',
+                                    marginTop: '-12px',
+                                    marginLeft: '-12px'
+                                }}
+                            />
+                        )}
+                    </Box>
+                </form>
             )}
         </div>
     );
