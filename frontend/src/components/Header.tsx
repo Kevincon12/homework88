@@ -18,7 +18,7 @@ export const Header = () => {
                     color="inherit"
                     style={{ textDecoration: 'none' }}
                 >
-                    My App
+                    Forum
                 </Typography>
 
                 {!user ? (
@@ -27,7 +27,17 @@ export const Header = () => {
                         <Button color="inherit" component={Link} to="/register">Register</Button>
                     </>
                 ) : (
-                    <Button color="inherit" onClick={() => dispatch(logout())}>Logout</Button>
+                    <>
+                        <Typography sx={{ marginRight: 2 }}>
+                            Hello, {user.username}
+                        </Typography>
+                        <Button color="inherit" component={Link} to="/add-post">
+                            Add Post
+                        </Button>
+                        <Button color="inherit" onClick={() => dispatch(logout())}>
+                            Logout
+                        </Button>
+                    </>
                 )}
             </Toolbar>
         </AppBar>
